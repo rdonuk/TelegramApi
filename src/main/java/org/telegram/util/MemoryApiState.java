@@ -1,4 +1,4 @@
-package org.telegram.bot.kernel.engine;
+package org.telegram.util;
 
 import org.jetbrains.annotations.NotNull;
 import org.telegram.api.TLConfig;
@@ -6,10 +6,6 @@ import org.telegram.api.TLDcOption;
 import org.telegram.api.auth.TLAuthorization;
 import org.telegram.api.engine.storage.AbsApiState;
 import org.telegram.api.user.TLUser;
-import org.telegram.bot.kernel.engine.storage.TLDcInfo;
-import org.telegram.bot.kernel.engine.storage.TLKey;
-import org.telegram.bot.kernel.engine.storage.TLLastKnownSalt;
-import org.telegram.bot.kernel.engine.storage.TLStorage;
 import org.telegram.mtproto.state.AbsMTProtoState;
 import org.telegram.mtproto.state.ConnectionInfo;
 import org.telegram.mtproto.state.KnownSalt;

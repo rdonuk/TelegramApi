@@ -75,6 +75,7 @@ public class MTProto {
     private final String TAG;
     private final int INSTANCE_INDEX;
     private final HashSet<TcpContext> contexts = new HashSet<>();
+    private final HashSet<TcpContext> createdContexts = new HashSet<>();
     private final HashMap<Integer, Integer> contextConnectionId = new HashMap<>();
     private final HashSet<Integer> connectedContexts = new HashSet<>();
     private final HashSet<Integer> initedContext = new HashSet<>();
@@ -187,11 +188,30 @@ public class MTProto {
         synchronized (this.contexts) {
             for (TcpContext context : this.contexts) {
                 context.suspendConnection(true);
+                try {
+                    context.getSelector().close();
+                } catch (IOException e) {
+                }
                 this.scheduller.onConnectionDies(context.getContextId());
+                createdContexts.remove(context);
             }
             this.contexts.clear();
             this.contexts.notifyAll();
+        
         }
+        synchronized (this.createdContexts) {
+            for (TcpContext context : this.createdContexts) {
+                context.suspendConnection(true);
+                try {
+                    context.getSelector().close();
+                } catch (IOException e) {
+                }
+                this.scheduller.onConnectionDies(context.getContextId());
+            }
+            this.createdContexts.clear();
+            this.createdContexts.notifyAll();
+        }
+    
     }
 
     private boolean needProcessing(long messageId) {
@@ -201,7 +221,15 @@ public class MTProto {
             }
 
             if (this.receivedMessages.size() > MESSAGES_CACHE_MIN) {
-                if (!receivedMessages.stream().anyMatch(x -> messageId > x)) {
+                boolean anyMatch=false;
+                for (Long m:receivedMessages){
+                    if (messageId>m){
+                        anyMatch=true;
+                        break;
+                    }
+                }
+    
+                if (!anyMatch){
                     return false;
                 }
             }
@@ -645,7 +673,7 @@ public class MTProto {
         public void run() {
             setPriority(Thread.MIN_PRIORITY);
             PrepareSchedule prepareSchedule = new PrepareSchedule();
-            while (!MTProto.this.isClosed) {
+            while (!MTProto.this.isClosed && !this.isInterrupted()) {
                 if (Logger.LOG_THREADS) {
                     Logger.d(MTProto.this.TAG, "Scheduller Iteration");
                 }
@@ -746,7 +774,7 @@ public class MTProto {
         @Override
         public void run() {
             setPriority(Thread.MIN_PRIORITY);
-            while (!MTProto.this.isClosed) {
+            while (!MTProto.this.isClosed && !this.isInterrupted()) {
                 if (Logger.LOG_THREADS) {
                     Logger.d(MTProto.this.TAG, "Response Iteration");
                 }
@@ -777,7 +805,7 @@ public class MTProto {
         @Override
         public void run() {
             setPriority(Thread.MIN_PRIORITY);
-            while (!MTProto.this.isClosed) {
+            while (!MTProto.this.isClosed && !this.isInterrupted()) {
                 if (Logger.LOG_THREADS) {
                     Logger.d(MTProto.this.TAG, "Connection Fixer Iteration");
                 }
@@ -793,6 +821,9 @@ public class MTProto {
 
                 ConnectionType type = MTProto.this.connectionRate.tryConnection();
                 TcpContext context = new TcpContext(MTProto.this, type.getHost(), type.getPort(), MTProto.this.tcpListener);
+                synchronized (MTProto.this.createdContexts) {
+                    MTProto.this.createdContexts.add(context);
+                }
                 context.connect();
                 if (MTProto.this.isClosed) {
                     return;

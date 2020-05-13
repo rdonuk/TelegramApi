@@ -1,10 +1,10 @@
-package org.telegram.bot.kernel.engine;
+package org.telegram.util;
+
 
 /**
  * Created by Hendrik Hofstadt on 08.03.14.
  */
 
-import org.telegram.util.BotLogger;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -24,7 +24,7 @@ import static org.telegram.tl.StreamingUtils.writeLong;
  * Created: 23.08.13 1:46
  */
 @SuppressWarnings("ALL")
-class SafeFileWriter {
+public class SafeFileWriter {
     private static final String LOGTAG = "SAFEFILEWRITER";
     private final Random random = new Random();
     private final String fileName;

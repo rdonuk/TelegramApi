@@ -12,7 +12,7 @@ import static org.telegram.mtproto.secure.CryptoUtils.xor;
  * Time: 4:05
  */
 public final class Entropy {
-    private static SecureRandom random;
+    private SecureRandom random;
     private static Entropy instance;
 
     private Entropy() {

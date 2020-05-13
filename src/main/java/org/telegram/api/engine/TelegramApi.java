@@ -90,6 +90,8 @@ public class TelegramApi {
      * @param _apiCallback the _ api callback
      */
     public TelegramApi(AbsApiState state, AppInfo _appInfo, ApiCallback _apiCallback) {
+        Logger.registerInterface(new Log4jLoggerInterface());
+        
         this.INSTANCE_INDEX = instanceIndex.incrementAndGet();
         this.TAG = "TelegramApi#" + this.INSTANCE_INDEX;
 
@@ -138,10 +140,10 @@ public class TelegramApi {
         this.senderThread.start();
         Logger.d(this.TAG, "Phase 2 in " + (System.currentTimeMillis() - start) + " ms");
 
-        start = System.currentTimeMillis();
-        this.downloader = new Downloader(this);
-        this.uploader = new Uploader(this);
-        Logger.d(this.TAG, "Phase 3 in " + (System.currentTimeMillis() - start) + " ms");
+//        start = System.currentTimeMillis();
+//        this.downloader = new Downloader(this);
+//        this.uploader = new Uploader(this);
+//        Logger.d(this.TAG, "Phase 3 in " + (System.currentTimeMillis() - start) + " ms");
     }
 
     /**
@@ -150,6 +152,9 @@ public class TelegramApi {
      * @return the downloader
      */
     public Downloader getDownloader() {
+        if(this.downloader == null)
+            this.downloader = new Downloader(this);
+    
         return this.downloader;
     }
 
@@ -245,8 +250,31 @@ public class TelegramApi {
                 this.timeoutThread.interrupt();
                 this.timeoutThread = null;
             }
-            this.mainProto.close();
+    
+            if (this.senderThread!=null){
+                this.senderThread.interrupt();
+                this.senderThread = null;
+            }
+    
+            if (this.dcThread!=null){
+                this.dcThread.interrupt();
+                this.dcThread = null;
+            }
+    
+            if(uploader != null)
+                this.uploader.stop();
+    
+            if(downloader != null)
+                this.downloader.stop();
+    
+            if(mainProto != null)
+                this.mainProto.close();
         }
+    
+        for (MTProto proto:dcProtos.values()){
+            proto.close();
+        }
+    
     }
 
     /**
@@ -897,7 +925,7 @@ public class TelegramApi {
         @Override
         public void run() {
             setPriority(Thread.MIN_PRIORITY);
-            while (!TelegramApi.this.isClosed) {
+            while (!TelegramApi.this.isClosed && !this.isInterrupted()) {
                 Logger.d(TelegramApi.this.TAG, "Sender iteration");
                 RpcCallbackWrapper wrapper = null;
                 synchronized (TelegramApi.this.callbacks) {
@@ -921,7 +949,7 @@ public class TelegramApi {
                         try {
                             TelegramApi.this.callbacks.wait();
                         } catch (InterruptedException e) {
-                            Logger.e(TelegramApi.this.TAG, e);
+//                            Logger.e(TelegramApi.this.TAG, e);
                             return;
                         }
                         continue;
@@ -971,7 +999,7 @@ public class TelegramApi {
 
         private MTProto waitForDc(final int dcId) throws IOException, java.util.concurrent.TimeoutException {
             Logger.d(TelegramApi.this.TAG, "#" + dcId + ": waitForDc");
-            if (TelegramApi.this.isClosed) {
+            if (TelegramApi.this.isClosed && !this.isInterrupted()) {
                 Logger.w(TelegramApi.this.TAG, "#" + dcId + ": Api is closed");
                 throw new TimeoutException();
             }
@@ -1215,7 +1243,7 @@ public class TelegramApi {
 
         @Override
         public void run() {
-            while (!TelegramApi.this.isClosed) {
+            while (!TelegramApi.this.isClosed && !this.isInterrupted()) {
                 Logger.d(TelegramApi.this.TAG, "Timeout Iteration");
                 Long key = null;
                 Integer id = null;
@@ -1234,7 +1262,7 @@ public class TelegramApi {
                         try {
                             TelegramApi.this.timeoutTimes.wait();
                         } catch (InterruptedException e) {
-                            // e.printStackTrace();
+                            this.interrupt();
                         }
                         continue;
                     }
@@ -1244,7 +1272,7 @@ public class TelegramApi {
                         try {
                             TelegramApi.this.timeoutTimes.wait(delta);
                         } catch (InterruptedException e) {
-                            // e.printStackTrace();
+                            this.interrupt();
                         }
                         continue;
                     }

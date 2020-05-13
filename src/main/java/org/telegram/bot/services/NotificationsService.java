@@ -1,5 +1,7 @@
 package org.telegram.bot.services;
 
+import org.telegram.util.BotLogger;
+
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 

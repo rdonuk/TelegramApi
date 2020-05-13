@@ -44,10 +44,6 @@ public class TLChannelForbidden extends TLAbsChat {
         return accessHash;
     }
 
-    public String getTitle() {
-        return title;
-    }
-
     public boolean isMegagroup() {
         return (flags & FLAG_MEGAGROUP) != 0;
     }
@@ -75,5 +71,10 @@ public class TLChannelForbidden extends TLAbsChat {
     @Override
     public String toString() {
         return "channelForbidden#8537784f";
+    }
+    
+    @Override
+    public String getUsername() {
+        return null;
     }
 }

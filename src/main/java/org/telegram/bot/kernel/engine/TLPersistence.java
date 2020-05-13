@@ -9,7 +9,7 @@ import org.telegram.bot.kernel.engine.storage.TLKey;
 import org.telegram.bot.kernel.engine.storage.TLLastKnownSalt;
 import org.telegram.bot.kernel.engine.storage.TLOldSession;
 import org.telegram.bot.kernel.engine.storage.TLStorage;
-import org.telegram.bot.services.BotLogger;
+import org.telegram.util.BotLogger;
 import org.telegram.tl.TLContext;
 import org.telegram.tl.TLObject;
 

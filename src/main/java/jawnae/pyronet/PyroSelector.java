@@ -4,17 +4,27 @@
 
 package jawnae.pyronet;
 
+import org.apache.log4j.Logger;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
-import java.nio.channels.*;
+import java.nio.channels.CancelledKeyException;
+import java.nio.channels.ClosedSelectorException;
+import java.nio.channels.SelectableChannel;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 
 @SuppressWarnings("ObjectEquality")
 public class PyroSelector {
+    
+    private static final Logger log = Logger.getLogger(PyroSelector.class);
+    
     private static boolean DO_NOT_CHECK_NETWORK_THREAD = false;
     static final int BUFFER_SIZE = 64 * 1024;
     private Thread networkThread;
@@ -88,7 +98,7 @@ public class PyroSelector {
             try {
                 task.run();
             } catch (Throwable cause) {
-                cause.printStackTrace();
+                log.error(cause);
             }
         }
     }
@@ -98,7 +108,11 @@ public class PyroSelector {
         try {
             selected = nioSelector.select(timeout);
         } catch (IOException exc) {
-            exc.printStackTrace();
+            try {
+                selected = nioSelector.select(timeout*5);
+            } catch (IOException e) {
+                log.error(exc);
+            }
         }
     }
 
@@ -141,31 +155,34 @@ public class PyroSelector {
         // -- to become UNACCESSIBLE), and all other threads
         // -- that might not see the change will
         // -- (continue to) block access to this selector
-        this.networkThread = null;
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                // spawned thread can access this selector
-                //
-                // N.B.
-                // -- updating this non-volatile field is thread-safe
-                // -- because the current thread can see it (causing it
-                // -- to become ACCESSIBLE), and all other threads
-                // -- that might not see the change will
-                // -- (continue to) block access to this selector
-                PyroSelector.this.networkThread = Thread.currentThread();
-
-                // start select-loop
-                try {
-                    while (true) {
-                        PyroSelector.this.select();
+        this.networkThread =
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        // spawned thread can access this selector
+                        //
+                        // N.B.
+                        // -- updating this non-volatile field is thread-safe
+                        // -- because the current thread can see it (causing it
+                        // -- to become ACCESSIBLE), and all other threads
+                        // -- that might not see the change will
+                        // -- (continue to) block access to this selector
+                        PyroSelector.this.networkThread = Thread.currentThread();
+                    
+                        // start select-loop
+                        try {
+                            while (true) {
+                                PyroSelector.this.select(1000L);
+                            }
+                        } catch (ClosedSelectorException ee) {
+                            log.warn("Selector closed " + ee);
+                        } catch (Exception exc) {
+                            throw new IllegalStateException(exc);
+                        }
                     }
-                } catch (Exception exc) {
-                    throw new IllegalStateException(exc);
-                }
-            }
-        }, name).start();
+                }, name);
+    
+        networkThread.start();
     }
 
     //

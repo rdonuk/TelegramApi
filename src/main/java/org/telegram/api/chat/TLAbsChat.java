@@ -18,6 +18,7 @@ import org.telegram.tl.TLObject;
 public abstract class TLAbsChat extends TLObject {
 
     protected int id; ///< chat id
+    private String title;
 
     /**
      * Instantiates a new TL abs chat.
@@ -43,4 +44,14 @@ public abstract class TLAbsChat extends TLObject {
     public void setId(int id) {
         this.id = id;
     }
+    
+    public final String getTitle() {
+        return title;
+    }
+    
+    public final void setTitle(String title) {
+        this.title = title;
+    }
+    
+    public abstract String getUsername();
 }

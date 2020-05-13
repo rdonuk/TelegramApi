@@ -28,4 +28,8 @@ public abstract class TLAbsUser extends TLObject {
     public void setId(int id) {
         this.id = id;
     }
+    
+    public abstract String getFirstName();
+    public abstract String getLastName();
+    public abstract String getUserName();
 }

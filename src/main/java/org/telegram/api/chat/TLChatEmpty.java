@@ -50,4 +50,9 @@ public class TLChatEmpty extends TLAbsChat {
     public String toString() {
         return "chatEmpty#9ba2d800";
     }
+    
+    @Override
+    public String getUsername() {
+        return null;
+    }
 }

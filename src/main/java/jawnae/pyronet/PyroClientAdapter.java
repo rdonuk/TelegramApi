@@ -4,7 +4,7 @@
 
 package jawnae.pyronet;
 
-import org.telegram.bot.services.BotLogger;
+import org.telegram.util.BotLogger;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;

@@ -26,8 +26,6 @@ public class TLChatForbidden extends TLAbsChat {
      */
     public static final int CLASS_ID = 0x7328bdb;
 
-    private String title; ///< Chat title
-
     /**
      * Instantiates a new TL chat forbidden.
      */
@@ -39,37 +37,24 @@ public class TLChatForbidden extends TLAbsChat {
         return CLASS_ID;
     }
 
-    /**
-     * Gets title.
-     *
-     * @return the title
-     */
-    public String getTitle() {
-        return this.title;
-    }
-
-    /**
-     * Sets title.
-     *
-     * @param title the title
-     */
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
     public void serializeBody(OutputStream stream)
             throws IOException {
         StreamingUtils.writeInt(this.id, stream);
-        StreamingUtils.writeTLString(this.title, stream);
+        StreamingUtils.writeTLString(getTitle(), stream);
     }
 
     public void deserializeBody(InputStream stream, TLContext context)
             throws IOException {
         this.id = StreamingUtils.readInt(stream);
-        this.title = StreamingUtils.readTLString(stream);
+        this.setTitle(StreamingUtils.readTLString(stream));
     }
 
     public String toString() {
         return "chatForbidden#7328bdb";
+    }
+    
+    @Override
+    public String getUsername() {
+        return null;
     }
 }

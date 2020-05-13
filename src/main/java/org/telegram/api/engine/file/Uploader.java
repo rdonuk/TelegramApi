@@ -524,7 +524,7 @@ public class Uploader {
                             Uploader.this.threadLocker.wait();
                             continue;
                         } catch (InterruptedException e) {
-                            Logger.e(Uploader.this.TAG, e);
+//                            Logger.e(Uploader.this.TAG, e);
                             return;
                         }
                     }
@@ -547,6 +547,12 @@ public class Uploader {
                     onBlockFailure(block);
                 }
             }
+        }
+    }
+    
+    public void stop() {
+        for (Thread t:threads){
+            t.interrupt();
         }
     }
 }

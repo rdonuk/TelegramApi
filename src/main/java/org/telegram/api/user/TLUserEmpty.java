@@ -40,4 +40,20 @@ public class TLUserEmpty extends TLAbsUser {
     public String toString() {
         return "userEmpty#200250ba";
     }
+    
+    @Override
+    public String getFirstName() {
+        return "anonymous";
+    }
+    
+    @Override
+    public String getLastName() {
+        
+        return "";
+    }
+    
+    @Override
+    public String getUserName() {
+        return "anonymous";
+    }
 }

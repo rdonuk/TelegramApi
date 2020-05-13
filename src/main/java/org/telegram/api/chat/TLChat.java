@@ -37,7 +37,6 @@ public class TLChat extends TLAbsChat {
     private static final int FLAG_MIGRATED_TO      = 0x00000040; // 6
 
     private int flags;
-    private String title; ///< Title of the chat
     private TLAbsChatPhoto photo; ///< Chat profile photo
     private int participantsCount; ///< Number of participants in the chat
     private int date; ///< Creation date of the chat
@@ -53,24 +52,6 @@ public class TLChat extends TLAbsChat {
 
     public int getClassId() {
         return CLASS_ID;
-    }
-
-    /**
-     * Gets title.
-     *
-     * @return the title
-     */
-    public String getTitle() {
-        return this.title;
-    }
-
-    /**
-     * Sets title.
-     *
-     * @param title the title
-     */
-    public void setTitle(String title) {
-        this.title = title;
     }
 
     /**
@@ -177,7 +158,7 @@ public class TLChat extends TLAbsChat {
             throws IOException {
         StreamingUtils.writeInt(this.flags, stream);
         StreamingUtils.writeInt(this.id, stream);
-        StreamingUtils.writeTLString(this.title, stream);
+        StreamingUtils.writeTLString(this.getTitle(), stream);
         StreamingUtils.writeTLObject(this.photo, stream);
         StreamingUtils.writeInt(this.participantsCount, stream);
         StreamingUtils.writeInt(this.date, stream);
@@ -191,7 +172,7 @@ public class TLChat extends TLAbsChat {
             throws IOException {
         this.flags = StreamingUtils.readInt(stream);
         this.id = StreamingUtils.readInt(stream);
-        this.title = StreamingUtils.readTLString(stream);
+        this.setTitle(StreamingUtils.readTLString(stream));
         this.photo = StreamingUtils.readTLObject(stream, context, TLAbsChatPhoto.class);
         this.participantsCount = StreamingUtils.readInt(stream);
         this.date = StreamingUtils.readInt(stream);
@@ -203,5 +184,10 @@ public class TLChat extends TLAbsChat {
 
     public String toString() {
         return "chat#d91cdd54";
+    }
+    
+    @Override
+    public String getUsername() {
+        return null;
     }
 }

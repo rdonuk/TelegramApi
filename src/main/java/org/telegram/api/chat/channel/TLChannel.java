@@ -35,7 +35,6 @@ public class TLChannel extends TLAbsChat {
 
     private int flags;
     private long accessHash;
-    private String title;
     private String username;
     private TLAbsChatPhoto photo;
     private int date;
@@ -66,15 +65,7 @@ public class TLChannel extends TLAbsChat {
     public void setAccessHash(long accessHash) {
         this.accessHash = accessHash;
     }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
+    
     public TLAbsChatPhoto getPhoto() {
         return photo;
     }
@@ -134,7 +125,7 @@ public class TLChannel extends TLAbsChat {
         if ((this.flags & FLAG_ACCESS_HASH) != 0) {
             StreamingUtils.writeLong(accessHash, stream);
         }
-        StreamingUtils.writeTLString(title, stream);
+        StreamingUtils.writeTLString(getTitle(), stream);
         if ((this.flags & FLAG_USERNAME) != 0) {
             StreamingUtils.writeTLString(username, stream);
         }
@@ -153,7 +144,7 @@ public class TLChannel extends TLAbsChat {
         if ((this.flags & FLAG_ACCESS_HASH) != 0) {
             this.accessHash = StreamingUtils.readLong(stream);
         }
-        this.title = StreamingUtils.readTLString(stream);
+        this.setTitle (StreamingUtils.readTLString(stream));
         if ((this.flags & FLAG_USERNAME) != 0) {
             this.username = StreamingUtils.readTLString(stream);
         }

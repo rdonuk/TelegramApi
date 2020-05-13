@@ -247,7 +247,8 @@ public class Downloader {
                     task.file = null;
                 }
                 if (task.listener != null) {
-                    task.listener.onDownloaded(task);
+//                    task.listener.onDownloaded(task);
+                    task.listener.onDownloaded(task.location, task.size, task.destFile, task.type);
                 }
             } catch (IOException e) {
                 Logger.e(this.TAG, e);
@@ -301,7 +302,6 @@ public class Downloader {
 
         return null;
     }
-
     private synchronized void onBlockDownloaded(DownloadBlock block, TLBytes data) {
         try {
             if (block.task.file != null) {
@@ -454,7 +454,7 @@ public class Downloader {
                             Downloader.this.threadLocker.wait();
                             continue;
                         } catch (InterruptedException e) {
-                            Logger.e(Downloader.this.TAG, e);
+//                            Logger.e(Downloader.this.TAG, e);
                             return;
                         }
                     }
@@ -499,6 +499,12 @@ public class Downloader {
 
         private TLAbsCdnFile getFileFromCdn(TLFileCdnRedirect file) {
             return null;
+        }
+    }
+    
+    public void stop() {
+        for (Thread t:threads){
+            t.interrupt();
         }
     }
 }

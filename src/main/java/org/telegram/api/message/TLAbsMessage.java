@@ -15,4 +15,5 @@ public abstract class TLAbsMessage extends TLObject {
     }
 
     public abstract int getChatId();
+    public abstract int getId();
 }
