@@ -4,6 +4,7 @@
 
 package jawnae.pyronet;
 
+import com.sun.org.apache.xpath.internal.SourceTreeManager;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
@@ -108,12 +109,17 @@ public class PyroSelector {
         try {
             selected = nioSelector.select(timeout);
         } catch (IOException exc) {
-            try {
-                Thread.sleep(2000);
-                selected = nioSelector.select(timeout);
-            } catch (IOException | InterruptedException e) {
-                log.error(exc);
-            }
+            log.error(exc);
+//            try {
+//                Thread.sleep(2000);
+//                System.out.println("PyroSelector.performNioSelect");
+//                selected = nioSelector.select(timeout);
+//
+//            } catch (IOException | InterruptedException e) {
+//                System.out.println("PyroSelector.performNioSelect failed");
+//                e.printStackTrace();
+//                log.error(e);
+//            }
         }
     }
 
@@ -173,7 +179,7 @@ public class PyroSelector {
                         // start select-loop
                         try {
                             while (true) {
-                                PyroSelector.this.select(1000L);
+                                PyroSelector.this.select();
                             }
 //                        } catch (ClosedSelectorException ee) {
 //                            log.warn("Selector closed " + ee);
