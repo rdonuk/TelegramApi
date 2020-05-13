@@ -174,8 +174,8 @@ public class PyroSelector {
                             while (true) {
                                 PyroSelector.this.select(1000L);
                             }
-                        } catch (ClosedSelectorException ee) {
-                            log.warn("Selector closed " + ee);
+//                        } catch (ClosedSelectorException ee) {
+//                            log.warn("Selector closed " + ee);
                         } catch (Exception exc) {
                             throw new IllegalStateException(exc);
                         }

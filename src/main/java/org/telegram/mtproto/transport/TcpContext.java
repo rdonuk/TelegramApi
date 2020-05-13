@@ -552,10 +552,10 @@ public class TcpContext implements PyroClientListener {
         lastPacketLength = 0;
         channelToken = 0;
     
-        try {
-            selector.close();
-        } catch (IOException e) {
-        }
+//        try {
+//            selector.close();
+//        } catch (IOException e) {
+//        }
     }
     
     public PyroSelector getSelector() {
