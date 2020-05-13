@@ -109,8 +109,9 @@ public class PyroSelector {
             selected = nioSelector.select(timeout);
         } catch (IOException exc) {
             try {
-                selected = nioSelector.select(timeout*5);
-            } catch (IOException e) {
+                Thread.sleep(2000);
+                selected = nioSelector.select(timeout);
+            } catch (IOException | InterruptedException e) {
                 log.error(exc);
             }
         }
