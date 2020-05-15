@@ -4,7 +4,6 @@
 
 package jawnae.pyronet;
 
-import com.sun.org.apache.xpath.internal.SourceTreeManager;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
@@ -12,7 +11,6 @@ import java.net.InetSocketAddress;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.nio.channels.CancelledKeyException;
-import java.nio.channels.ClosedSelectorException;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -155,10 +153,10 @@ public class PyroSelector {
                 new Thread(name) {
                     @Override
                     public void run() {
-                    
+                
                         // start select-loop
                         try {
-                            while (!this.isInterrupted()) {
+                            while (!this.isInterrupted() && nioSelector.isOpen()) {
                                 PyroSelector.this.select(1000L);
                             }
 //                        } catch (ClosedSelectorException ee) {
