@@ -150,32 +150,16 @@ public class PyroSelector {
     }
 
     public void spawnNetworkThread(final String name) {
-        // now no thread can access this selector
-        //
-        // N.B.
-        // -- updating this non-volatile field is thread-safe
-        // -- because the current thread can see it (causing it
-        // -- to become UNACCESSIBLE), and all other threads
-        // -- that might not see the change will
-        // -- (continue to) block access to this selector
+        
         this.networkThread =
-                new Thread(new Runnable() {
+                new Thread(name) {
                     @Override
                     public void run() {
-                        // spawned thread can access this selector
-                        //
-                        // N.B.
-                        // -- updating this non-volatile field is thread-safe
-                        // -- because the current thread can see it (causing it
-                        // -- to become ACCESSIBLE), and all other threads
-                        // -- that might not see the change will
-                        // -- (continue to) block access to this selector
-                        PyroSelector.this.networkThread = Thread.currentThread();
                     
                         // start select-loop
                         try {
-                            while (true) {
-                                PyroSelector.this.select();
+                            while (!this.isInterrupted()) {
+                                PyroSelector.this.select(1000L);
                             }
 //                        } catch (ClosedSelectorException ee) {
 //                            log.warn("Selector closed " + ee);
@@ -183,7 +167,7 @@ public class PyroSelector {
                             throw new IllegalStateException(exc);
                         }
                     }
-                }, name);
+                };
     
         networkThread.start();
     }

@@ -379,31 +379,37 @@ public class TcpContext implements PyroClientListener {
                     willRetryConnectCount = 1;
                 }
             }
-            Logger.d(TcpContext.this.TAG, "Reconnect " + ip + ":" + port + " " + TcpContext.this);
-            try {
-                synchronized (timerSync) {
-                    reconnectTimer = new Timer();
-                    reconnectTimer.schedule(new TimerTask() {
-                        @Override
-                        public void run() {
-                            selector.scheduleTask(() -> {
-                                try {
-                                    synchronized (timerSync) {
-                                        if (reconnectTimer != null) {
-                                            reconnectTimer.cancel();
-                                            reconnectTimer = null;
+            
+            if(failedConnectionCount <= willRetryConnectCount) {
+                Logger.d(TcpContext.this.TAG, "Reconnect " + ip + ":" + port + " " + TcpContext.this);
+                try {
+                    synchronized (timerSync) {
+                        reconnectTimer = new Timer();
+                        reconnectTimer.schedule(new TimerTask() {
+                            @Override
+                            public void run() {
+                                selector.scheduleTask(() -> {
+                                    try {
+                                        synchronized (timerSync) {
+                                            if (reconnectTimer != null) {
+                                                reconnectTimer.cancel();
+                                                reconnectTimer = null;
+                                            }
                                         }
+                                    } catch (Exception e2) {
+                                        Logger.e(TcpContext.this.TAG, e2);
                                     }
-                                } catch (Exception e2) {
-                                    Logger.e(TcpContext.this.TAG, e2);
-                                }
-                                connect();
-                            });
-                        }
-                    }, (failedConnectionCount > 3) ? 500 : 300, (failedConnectionCount > 3) ? 500 : 300);
+                                    connect();
+                                });
+                            }
+                        }, (failedConnectionCount > 3) ? 500 : 300, (failedConnectionCount > 3) ? 500 : 300);
+                    }
+                } catch (Exception e3) {
+                    Logger.e(TcpContext.this.TAG, e3);
                 }
-            } catch (Exception e3) {
-                Logger.e(TcpContext.this.TAG, e3);
+            } else {
+                suspendConnectionInternal();
+                closeSelector();
             }
         }
     }
@@ -471,39 +477,44 @@ public class TcpContext implements PyroClientListener {
                 willRetryConnectCount = 1;
             }
         }
-        if (failedConnectionCount > willRetryConnectCount) {
-            failedConnectionCount = 0;
-        }
+//        if (failedConnectionCount > willRetryConnectCount) {
+//            failedConnectionCount = 0;
+//        }
 
         if (e != null) {
             Logger.e(TcpContext.this.TAG, e);
         }
-        Logger.d(TcpContext.this.TAG, "Reconnect " + ip + ":" + port + " " + TcpContext.this);
-        try {
-            reconnectTimer = new Timer();
-            reconnectTimer.schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    selector.scheduleTask(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                synchronized (timerSync) {
-                                    if (reconnectTimer != null) {
-                                        reconnectTimer.cancel();
-                                        reconnectTimer = null;
+        if(failedConnectionCount <= willRetryConnectCount) {
+            Logger.d(TcpContext.this.TAG, "Reconnect " + ip + ":" + port + " " + TcpContext.this);
+            try {
+                reconnectTimer = new Timer();
+                reconnectTimer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        selector.scheduleTask(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    synchronized (timerSync) {
+                                        if (reconnectTimer != null) {
+                                            reconnectTimer.cancel();
+                                            reconnectTimer = null;
+                                        }
                                     }
+                                } catch (Exception e2) {
+                                    Logger.e(TcpContext.this.TAG, e2);
                                 }
-                            } catch (Exception e2) {
-                                Logger.e(TcpContext.this.TAG, e2);
+                                connect();
                             }
-                            connect();
-                        }
-                    });
-                }
-            }, (failedConnectionCount >= 3) ? 500 : 300, (failedConnectionCount >= 3) ? 500 : 300);
-        } catch (Exception e3) {
-            Logger.e(TcpContext.this.TAG, e3);
+                        });
+                    }
+                }, (failedConnectionCount >= 3) ? 500 : 300, (failedConnectionCount >= 3) ? 500 : 300);
+            } catch (Exception e3) {
+                Logger.e(TcpContext.this.TAG, e3);
+            }
+        } else {
+            suspendConnectionInternal();
+            closeSelector();
         }
     }
 
@@ -551,14 +562,12 @@ public class TcpContext implements PyroClientListener {
         }
         lastPacketLength = 0;
         channelToken = 0;
-    
-//        try {
-//            selector.close();
-//        } catch (IOException e) {
-//        }
     }
     
-    public PyroSelector getSelector() {
-        return selector;
+    public void closeSelector() {
+        try {
+            selector.close();
+        } catch (IOException e) {
+        }
     }
 }

@@ -188,10 +188,8 @@ public class MTProto {
         synchronized (this.contexts) {
             for (TcpContext context : this.contexts) {
                 context.suspendConnection(true);
-                try {
-                    context.getSelector().close();
-                } catch (IOException e) {
-                }
+                context.closeSelector();
+
                 this.scheduller.onConnectionDies(context.getContextId());
                 createdContexts.remove(context);
             }
@@ -202,10 +200,8 @@ public class MTProto {
         synchronized (this.createdContexts) {
             for (TcpContext context : this.createdContexts) {
                 context.suspendConnection(true);
-                try {
-                    context.getSelector().close();
-                } catch (IOException e) {
-                }
+                context.closeSelector();
+                
                 this.scheduller.onConnectionDies(context.getContextId());
             }
             this.createdContexts.clear();
@@ -908,6 +904,7 @@ public class MTProto {
                     MTProto.this.contexts.remove(context);
                     MTProto.this.contexts.notifyAll();
                     MTProto.this.scheduller.onConnectionDies(context.getContextId());
+                    context.closeSelector();
                 }
             }
         }
