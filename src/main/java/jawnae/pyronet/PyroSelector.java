@@ -108,18 +108,14 @@ public class PyroSelector {
         int selected;
         try {
             selected = nioSelector.select(timeout);
-        } catch (IOException exc) {
+        } catch (Exception exc) {
             log.error(exc);
-//            try {
-//                Thread.sleep(2000);
-//                System.out.println("PyroSelector.performNioSelect");
-//                selected = nioSelector.select(timeout);
-//
-//            } catch (IOException | InterruptedException e) {
-//                System.out.println("PyroSelector.performNioSelect failed");
-//                e.printStackTrace();
-//                log.error(e);
-//            }
+            try {
+                Thread.sleep(2000);
+                selected = nioSelector.select(timeout);
+            } catch (IOException | InterruptedException e) {
+                log.error(e);
+            }
         }
     }
 
