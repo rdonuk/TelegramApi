@@ -86,6 +86,7 @@ public class MTProto {
     private int desiredConnectionCount;
     private TcpContextCallback tcpListener;
     private ConnectionFixerThread connectionFixerThread;
+    private ContextsClearThread contextsClearThread;
     private SchedullerThread schedullerThread;
     private ResponseProcessor responseProcessor;
     private byte[] authKey;
@@ -132,6 +133,8 @@ public class MTProto {
         this.responseProcessor.start();
         this.connectionFixerThread = new ConnectionFixerThread();
         this.connectionFixerThread.start();
+        this.contextsClearThread = new ContextsClearThread();
+        this.contextsClearThread.start();
     }
 
     public static int readInt(byte[] src) {
@@ -169,6 +172,9 @@ public class MTProto {
             this.isClosed = true;
             if (this.connectionFixerThread != null) {
                 this.connectionFixerThread.interrupt();
+            }
+            if (this.contextsClearThread != null) {
+                this.contextsClearThread.interrupt();
             }
             if (this.schedullerThread != null) {
                 this.schedullerThread.interrupt();
@@ -831,6 +837,30 @@ public class MTProto {
                 }
                 synchronized (MTProto.this.scheduller) {
                     MTProto.this.scheduller.notifyAll();
+                }
+            }
+        }
+    }
+    
+    private class ContextsClearThread extends Thread {
+        private ContextsClearThread() {
+            setName("ContextsClearThread#" + hashCode());
+        }
+    
+        @Override
+        public void run() {
+            setPriority(Thread.MIN_PRIORITY);
+            while (!MTProto.this.isClosed && !this.isInterrupted()) {
+                synchronized (MTProto.this.contexts) {
+                    contexts.removeIf(TcpContext::isDead);
+                }
+                synchronized (MTProto.this.createdContexts) {
+                    createdContexts.removeIf(TcpContext::isDead);
+                }
+    
+                try {
+                    sleep(100000L);
+                } catch (InterruptedException e) {
                 }
             }
         }

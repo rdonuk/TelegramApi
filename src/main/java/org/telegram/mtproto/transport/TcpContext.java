@@ -567,7 +567,12 @@ public class TcpContext implements PyroClientListener {
     public void closeSelector() {
         try {
             selector.close();
+            connectionState = ConnectionState.TcpConnectionStageDead;
         } catch (IOException e) {
         }
+    }
+    
+    public boolean isDead() {
+        return connectionState == ConnectionState.TcpConnectionStageDead;
     }
 }

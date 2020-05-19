@@ -11,5 +11,6 @@ enum ConnectionState {
     TcpConnectionStageIdle,
     TcpConnectionStageConnecting,
     TcpConnectionStageReconnecting,
-    TcpConnectionStageConnected
+    TcpConnectionStageConnected,
+    TcpConnectionStageDead
 }
