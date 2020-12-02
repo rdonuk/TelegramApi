@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="telegramapi-66.3-fixed:jar">
+    <output-path>$PROJECT_DIR$/../trendit/trendit-connector/lib/telegram</output-path>
+    <root id="archive" name="telegramapi-66.3-fixed.jar">
+      <element id="module-output" name="TelegramApi" />
+      <element id="module-source" name="TelegramApi" />
+    </root>
+  </artifact>
+</component>
