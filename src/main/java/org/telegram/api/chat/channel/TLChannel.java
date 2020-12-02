@@ -114,6 +114,10 @@ public class TLChannel extends TLAbsChat {
         return (this.flags & FLAG_RESTRICTED) != 0;
     }
 
+    public boolean isVerified() {
+        return (this.flags & FLAG_VERIFIED) != 0;
+    }
+
     public boolean hasAccessHash() {
         return (this.flags & FLAG_ACCESS_HASH) != 0;
     }
