@@ -163,6 +163,7 @@ public class TLUser extends TLAbsUser {
         return (this.flags & FLAG_BOT_CANT_JOIN_GROUP) != 0;
     }
 
+    @Override
     public boolean isVerified() {
         return (this.flags & FLAG_VERIFIED) != 0;
     }

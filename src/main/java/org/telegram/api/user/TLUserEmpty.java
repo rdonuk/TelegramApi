@@ -56,4 +56,9 @@ public class TLUserEmpty extends TLAbsUser {
     public String getUserName() {
         return "anonymous";
     }
+
+    @Override
+    public boolean isVerified() {
+        return false;
+    }
 }

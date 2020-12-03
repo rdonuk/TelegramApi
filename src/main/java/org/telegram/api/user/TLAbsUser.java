@@ -32,4 +32,5 @@ public abstract class TLAbsUser extends TLObject {
     public abstract String getFirstName();
     public abstract String getLastName();
     public abstract String getUserName();
+    public abstract boolean isVerified();
 }
