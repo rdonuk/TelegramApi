@@ -10,11 +10,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
-import java.nio.channels.CancelledKeyException;
-import java.nio.channels.SelectableChannel;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.SocketChannel;
+import java.nio.channels.*;
 import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -103,15 +99,13 @@ public class PyroSelector {
     }
 
     private final void performNioSelect(long timeout) {
-        int selected;
         try {
-            selected = nioSelector.select(timeout);
+            nioSelector.select(timeout);
         } catch (Exception exc) {
             log.error(exc);
             try {
-                Thread.sleep(2000);
-                selected = nioSelector.select(timeout);
-            } catch (IOException | InterruptedException e) {
+                nioSelector.select(timeout);
+            } catch (IOException e) {
                 log.error(e);
             }
         }
@@ -159,8 +153,8 @@ public class PyroSelector {
                             while (!this.isInterrupted() && nioSelector.isOpen()) {
                                 PyroSelector.this.select(1000L);
                             }
-//                        } catch (ClosedSelectorException ee) {
-//                            log.warn("Selector closed " + ee);
+                        } catch (ClosedSelectorException ee) {
+                            log.warn("Selector closed " + ee);
                         } catch (Exception exc) {
                             throw new IllegalStateException(exc);
                         }
