@@ -11,6 +11,7 @@ import org.telegram.api.photo.TLAbsPhoto;
 import org.telegram.api.user.TLAbsUser;
 import org.telegram.tl.StreamingUtils;
 import org.telegram.tl.TLContext;
+import org.telegram.tl.TLObject;
 import org.telegram.tl.TLVector;
 
 import java.io.IOException;
@@ -37,7 +38,7 @@ public class TLChatInvite extends TLAbsChatInvite {
 
     private int flags;
     private String title; ///< Title of the chat
-    private TLAbsPhoto photo;
+    private TLObject photo;
     private int participantsCount;
     private TLVector<TLAbsUser> participants;
 
@@ -57,7 +58,7 @@ public class TLChatInvite extends TLAbsChatInvite {
         return title;
     }
 
-    public TLAbsPhoto getPhoto() {
+    public TLObject getPhoto() {
         return photo;
     }
 
@@ -106,7 +107,7 @@ public class TLChatInvite extends TLAbsChatInvite {
         super.deserializeBody(stream, context);
         this.flags = StreamingUtils.readInt(stream);
         this.title = StreamingUtils.readTLString(stream);
-        photo = (TLAbsPhoto) StreamingUtils.readTLObject(stream, context);
+        photo = StreamingUtils.readTLObject(stream, context);
         participantsCount = StreamingUtils.readInt(stream);
         if ((flags & FLAG_PARTICIPANTS) != 0) {
             participants = StreamingUtils.readTLVector(stream, context, TLAbsUser.class);
