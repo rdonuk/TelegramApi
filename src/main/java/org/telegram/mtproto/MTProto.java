@@ -807,7 +807,8 @@ public class MTProto {
         @Override
         public void run() {
             setPriority(Thread.MIN_PRIORITY);
-            while (!MTProto.this.isClosed && !this.isInterrupted()) {
+            while (!MTProto.this.isClosed && !this.isInterrupted()
+                    && MTProto.this.createdContexts.size() < MTProto.this.desiredConnectionCount * 5) {
                 if (Logger.LOG_THREADS) {
                     Logger.d(MTProto.this.TAG, "Connection Fixer Iteration");
                 }
