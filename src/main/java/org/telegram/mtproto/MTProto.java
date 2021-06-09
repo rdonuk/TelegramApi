@@ -75,7 +75,6 @@ public class MTProto {
     private final String TAG;
     private final int INSTANCE_INDEX;
     private final HashSet<TcpContext> contexts = new HashSet<>();
-    private final HashSet<TcpContext> createdContexts = new HashSet<>();
     private final HashMap<Integer, Integer> contextConnectionId = new HashMap<>();
     private final HashSet<Integer> connectedContexts = new HashSet<>();
     private final HashSet<Integer> initedContext = new HashSet<>();
@@ -86,7 +85,6 @@ public class MTProto {
     private int desiredConnectionCount;
     private TcpContextCallback tcpListener;
     private ConnectionFixerThread connectionFixerThread;
-    private ContextsClearThread contextsClearThread;
     private SchedullerThread schedullerThread;
     private ResponseProcessor responseProcessor;
     private byte[] authKey;
@@ -133,8 +131,6 @@ public class MTProto {
         this.responseProcessor.start();
         this.connectionFixerThread = new ConnectionFixerThread();
         this.connectionFixerThread.start();
-        this.contextsClearThread = new ContextsClearThread();
-        this.contextsClearThread.start();
     }
 
     public static int readInt(byte[] src) {
@@ -173,9 +169,6 @@ public class MTProto {
             if (this.connectionFixerThread != null) {
                 this.connectionFixerThread.interrupt();
             }
-            if (this.contextsClearThread != null) {
-                this.contextsClearThread.interrupt();
-            }
             if (this.schedullerThread != null) {
                 this.schedullerThread.interrupt();
             }
@@ -197,23 +190,10 @@ public class MTProto {
                 context.closeSelector();
 
                 this.scheduller.onConnectionDies(context.getContextId());
-                createdContexts.remove(context);
             }
             this.contexts.clear();
             this.contexts.notifyAll();
-        
         }
-        synchronized (this.createdContexts) {
-            for (TcpContext context : this.createdContexts) {
-                context.suspendConnection(true);
-                context.closeSelector();
-                
-                this.scheduller.onConnectionDies(context.getContextId());
-            }
-            this.createdContexts.clear();
-            this.createdContexts.notifyAll();
-        }
-    
     }
 
     private boolean needProcessing(long messageId) {
@@ -807,8 +787,7 @@ public class MTProto {
         @Override
         public void run() {
             setPriority(Thread.MIN_PRIORITY);
-            while (!MTProto.this.isClosed && !this.isInterrupted()
-                    && MTProto.this.createdContexts.size() < MTProto.this.desiredConnectionCount * 5) {
+            while (!MTProto.this.isClosed && !this.isInterrupted()) {
                 if (Logger.LOG_THREADS) {
                     Logger.d(MTProto.this.TAG, "Connection Fixer Iteration");
                 }
@@ -824,9 +803,6 @@ public class MTProto {
 
                 ConnectionType type = MTProto.this.connectionRate.tryConnection();
                 TcpContext context = new TcpContext(MTProto.this, type.getHost(), type.getPort(), MTProto.this.tcpListener);
-                synchronized (MTProto.this.createdContexts) {
-                    MTProto.this.createdContexts.add(context);
-                }
                 context.connect();
                 if (MTProto.this.isClosed) {
                     return;
@@ -838,30 +814,6 @@ public class MTProto {
                 }
                 synchronized (MTProto.this.scheduller) {
                     MTProto.this.scheduller.notifyAll();
-                }
-            }
-        }
-    }
-    
-    private class ContextsClearThread extends Thread {
-        private ContextsClearThread() {
-            setName("ContextsClearThread#" + hashCode());
-        }
-    
-        @Override
-        public void run() {
-            setPriority(Thread.MIN_PRIORITY);
-            while (!MTProto.this.isClosed && !this.isInterrupted()) {
-                synchronized (MTProto.this.contexts) {
-                    contexts.removeIf(TcpContext::isDead);
-                }
-                synchronized (MTProto.this.createdContexts) {
-                    createdContexts.removeIf(TcpContext::isDead);
-                }
-    
-                try {
-                    sleep(100000L);
-                } catch (InterruptedException e) {
                 }
             }
         }
@@ -933,9 +885,9 @@ public class MTProto {
                         MTProto.this.connectionRate.onConnectionFailure(MTProto.this.contextConnectionId.get(context.getContextId()));
                     }
                     MTProto.this.contexts.remove(context);
+                    context.closeSelector();
                     MTProto.this.contexts.notifyAll();
                     MTProto.this.scheduller.onConnectionDies(context.getContextId());
-                    context.closeSelector();
                 }
             }
         }
@@ -961,6 +913,7 @@ public class MTProto {
             Logger.d(MTProto.this.TAG, "onChannelBroken (#" + contextId + ")");
             synchronized (MTProto.this.contexts) {
                 MTProto.this.contexts.remove(context);
+                context.closeSelector();
                 if (!MTProto.this.connectedContexts.contains(contextId)) {
                     if (MTProto.this.contextConnectionId.containsKey(contextId)) {
                         MTProto.this.exponentalBackoff.onFailureNoWait();
