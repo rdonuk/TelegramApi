@@ -187,7 +187,6 @@ public class MTProto {
         synchronized (this.contexts) {
             for (TcpContext context : this.contexts) {
                 context.suspendConnection(true);
-                context.closeSelector();
 
                 this.scheduller.onConnectionDies(context.getContextId());
             }
@@ -884,8 +883,9 @@ public class MTProto {
                         MTProto.this.exponentalBackoff.onFailureNoWait();
                         MTProto.this.connectionRate.onConnectionFailure(MTProto.this.contextConnectionId.get(context.getContextId()));
                     }
+                    MTProto.this.connectedContexts.remove(context.getContextId());
+                    MTProto.this.contextConnectionId.remove(context.getContextId());
                     MTProto.this.contexts.remove(context);
-                    context.closeSelector();
                     MTProto.this.contexts.notifyAll();
                     MTProto.this.scheduller.onConnectionDies(context.getContextId());
                 }
@@ -913,13 +913,15 @@ public class MTProto {
             Logger.d(MTProto.this.TAG, "onChannelBroken (#" + contextId + ")");
             synchronized (MTProto.this.contexts) {
                 MTProto.this.contexts.remove(context);
-                context.closeSelector();
+                context.suspendConnection(true);
                 if (!MTProto.this.connectedContexts.contains(contextId)) {
                     if (MTProto.this.contextConnectionId.containsKey(contextId)) {
                         MTProto.this.exponentalBackoff.onFailureNoWait();
                         MTProto.this.connectionRate.onConnectionFailure(MTProto.this.contextConnectionId.get(contextId));
                     }
                 }
+                MTProto.this.contextConnectionId.remove(contextId);
+                MTProto.this.connectedContexts.remove(contextId);
                 MTProto.this.contexts.notifyAll();
             }
             MTProto.this.scheduller.onConnectionDies(context.getContextId());

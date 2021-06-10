@@ -408,8 +408,7 @@ public class TcpContext implements PyroClientListener {
                     Logger.e(TcpContext.this.TAG, e3);
                 }
             } else {
-                suspendConnectionInternal();
-                closeSelector();
+                callback.onChannelBroken(TcpContext.this);
             }
         }
     }
@@ -513,8 +512,7 @@ public class TcpContext implements PyroClientListener {
                 Logger.e(TcpContext.this.TAG, e3);
             }
         } else {
-            suspendConnectionInternal();
-            closeSelector();
+            callback.onChannelBroken(TcpContext.this);
         }
     }
 
@@ -544,7 +542,8 @@ public class TcpContext implements PyroClientListener {
                 reconnectTimer = null;
             }
         }
-        if ((connectionState == ConnectionState.TcpConnectionStageIdle) || (connectionState == ConnectionState.TcpConnectionStageSuspended)) {
+        closeSelector();
+        if (connectionState == ConnectionState.TcpConnectionStageSuspended) {
             return;
         }
         Logger.d(TcpContext.this.TAG, "suspend connnection " + TcpContext.this);
@@ -554,7 +553,6 @@ public class TcpContext implements PyroClientListener {
             client.dropConnection();
             client = null;
         }
-        callback.onChannelBroken(TcpContext.this);
         isFirstPackage = true;
         if (restOfTheData != null) {
             BuffersStorage.getInstance().reuseFreeBuffer(restOfTheData);
@@ -564,15 +562,10 @@ public class TcpContext implements PyroClientListener {
         channelToken = 0;
     }
     
-    public void closeSelector() {
+    private void closeSelector() {
         try {
-            connectionState = ConnectionState.TcpConnectionStageDead;
             selector.close();
         } catch (IOException e) {
         }
-    }
-    
-    public boolean isDead() {
-        return connectionState == ConnectionState.TcpConnectionStageDead;
     }
 }
